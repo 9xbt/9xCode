@@ -10,7 +10,7 @@ namespace _9xCode
 {
     internal static class Program
     {
-        // Beta 1
+        // Beta 2
 
         static Dictionary<string, ConsoleColor> StringToConsoleColor = new Dictionary<string, ConsoleColor>()
         {
@@ -36,7 +36,7 @@ namespace _9xCode
             {
 
             run:
-                bool SysLib = false, ConsoleLib = false;
+                bool SysLib = false, ConsoleLib = false, TimeLib = false;
 
                 Dictionary<string, bool> Booleans = new Dictionary<string, bool>() { };
                 Dictionary<string, int> Integers = new Dictionary<string, int>() { };
@@ -55,23 +55,23 @@ namespace _9xCode
 
                     if (line.StartsWith("import"))
                     {
-                        if (line.EndsWith("System"))
+                        if (line.Contains("System"))
                         {
                             SysLib = true;
                         }
 
-                        if (line.EndsWith("System.*"))
-                        {
-                            SysLib = true; ConsoleLib = true;
-                        }
-
-                        if (line.EndsWith("System.Console"))
+                        if (line.Contains("Console"))
                         {
                             ConsoleLib = true;
                         }
+
+                        if (line.Contains("Time"))
+                        {
+                            TimeLib = true;
+                        }
                     }
 
-                    if (line.StartsWith("Bool"))
+                    if (line.StartsWith("Boolean"))
                     {
                         string key = line.Substring(8, line.IndexOf(" =") - 8);
 
@@ -83,7 +83,7 @@ namespace _9xCode
                         Booleans.Add(key, Convert.ToBoolean(line.Substring(line.IndexOf("= ") + 2)));
                     }
 
-                    if (line.StartsWith("Int"))
+                    if (line.StartsWith("Integer"))
                     {
                         string key = line.Substring(8, line.IndexOf(" =") - 8);
 
@@ -92,7 +92,19 @@ namespace _9xCode
                             Integers.Remove(key);
                         }
 
-                        if (line.Substring(line.IndexOf("= ") + 2).StartsWith("0x"))
+                        if (line.Substring(line.IndexOf("= ") + 2).StartsWith("Seconds"))
+                        {
+                            Integers.Add(key, DateTime.Now.Second);
+                        }
+                        else if (line.Substring(line.IndexOf("= ") + 2).StartsWith("Minutes"))
+                        {
+                            Integers.Add(key, DateTime.Now.Minute);
+                        }
+                        else if (line.Substring(line.IndexOf("= ") + 2).StartsWith("Hours"))
+                        {
+                            Integers.Add(key, DateTime.Now.Hour);
+                        }
+                        else if (line.Substring(line.IndexOf("= ") + 2).StartsWith("0x"))
                         {
                             line.Remove(0, 2);
                             Integers.Add(key, Convert.ToInt32(line.Substring(line.IndexOf("= ") + 2), 16));
@@ -208,7 +220,7 @@ namespace _9xCode
 
                     if (ConsoleLib)
                     {
-                        if (line.StartsWith("Write") || line.StartsWith("Print"))
+                        if (line.StartsWith("Write(") || line.StartsWith("Print("))
                         {
                             int start = line.IndexOf('(');
                             int end = line.IndexOf(')') - start;
@@ -242,6 +254,18 @@ namespace _9xCode
                                     {
                                         result += bolval;
                                     }
+                                    else if (c.Trim() == "Seconds")
+                                    {
+                                        result += DateTime.Now.Second;
+                                    }
+                                    else if (c.Trim() == "Minutes")
+                                    {
+                                        result += DateTime.Now.Minute;
+                                    }
+                                    else if (c.Trim() == "Hours")
+                                    {
+                                        result += DateTime.Now.Hour;
+                                    }
                                 }
 
                                 Console.Write(result);
@@ -264,13 +288,25 @@ namespace _9xCode
                                 {
                                     Console.Write(bolval);
                                 }
+                                else if (line.Substring(start + 1, end - 1) == "Seconds")
+                                {
+                                    Console.Write(DateTime.Now.Second);
+                                }
+                                else if (line.Substring(start + 1, end - 1) == "Minutes")
+                                {
+                                    Console.Write(DateTime.Now.Minute);
+                                }
+                                else if (line.Substring(start + 1, end - 1) == "Hours")
+                                {
+                                    Console.Write(DateTime.Now.Hour);
+                                }
                                 else
                                 {
-                                    Console.Write(line.Substring(start + 1, end - 2));
+                                    Console.Write(line.Substring(start + 1, end - 1));
                                 }
                             }
 
-                            if (line.StartsWith("Print"))
+                            if (line.StartsWith("Print("))
                             {
                                 Console.Write('\n');
                             }
@@ -325,7 +361,15 @@ namespace _9xCode
                             }
                             else
                             {
-                                Console.CursorLeft = Convert.ToInt32(line.Substring(10));
+                                try
+                                {
+                                    Console.CursorLeft = Convert.ToInt32(line.Substring(10));
+                                }
+                                catch
+                                {
+                                    Console.WriteLine("Error at line" + i + ": Not an integer!");
+                                    break;
+                                }
                             }
                         }
 
@@ -337,44 +381,78 @@ namespace _9xCode
                             }
                             else
                             {
-                                Console.CursorTop = Convert.ToInt32(line.Substring(10));
+                                try
+                                {
+                                    Console.CursorLeft = Convert.ToInt32(line.Substring(10));
+                                }
+                                catch
+                                {
+                                    Console.WriteLine("Error at line" + i + ": Not an integer!");
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (line.StartsWith("Cursor = "))
+                        {
+                            if (Booleans.TryGetValue(line.Substring(9), out bool intval))
+                            {
+                                Console.CursorVisible = intval;
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    Console.CursorVisible = Convert.ToBoolean(line.Substring(9));
+                                }
+                                catch
+                                {
+                                    Console.WriteLine("Error at line" + i + ": Not a boolean!");
+                                    break;
+                                }
                             }
                         }
                     }
                     else
                     {
-                        if (line.StartsWith("Print") || line.Equals("Clear()") || line.StartsWith("ForeColor = ") || line.StartsWith("BackColor = ") || line.StartsWith("CursorX = ") || line.StartsWith("CursorY = "))
+                        if (line.StartsWith("Write(") || line.StartsWith("Print(") || line.Equals("Clear()") || line.StartsWith("ForeColor = ") || line.StartsWith("BackColor = ") || line.StartsWith("CursorX = ") || line.StartsWith("CursorY = ") || line.StartsWith("Cursor = "))
                         {
                             Console.WriteLine("Error at line " + i + ": Library not imported!");
                             break;
                         }
                     }
 
-                    if (line.Equals("Stop()") && SysLib)
+                    if (SysLib)
                     {
-                        break;
+                        if (line.Equals("Stop()"))
+                        {
+                            break;
+                        }
+
+                        else if (line.StartsWith("Goto("))
+                        {
+                            int start = line.IndexOf('(');
+                            int end = line.IndexOf(')') - start;
+                            int lineToGoTo = Convert.ToInt32(line.Substring(start + 1, end - 1));
+
+                            i = lineToGoTo;
+                        }
+
+                        else if (line.StartsWith("Delay("))
+                        {
+                            int start = line.IndexOf('(');
+                            int end = line.IndexOf(')') - start;
+
+                            Thread.Sleep(Convert.ToInt32(line.Substring(start + 1, end - 1)));
+                        }
                     }
-
-                    else if (line.StartsWith("Goto") && SysLib)
+                    else
                     {
-                        int start = line.IndexOf('(');
-                        int end = line.IndexOf(')') - start;
-                        int lineToGoTo = Convert.ToInt32(line.Substring(start + 1, end - 1));
-
-                        i = lineToGoTo;
-                    }
-
-                    else if (line.StartsWith("Delay") && SysLib)
-                    {
-                        int start = line.IndexOf('(');
-                        int end = line.IndexOf(')') - start;
-
-                        Thread.Sleep(Convert.ToInt32(line.Substring(start + 1, end - 1)));
-                    }
-                    else if (!SysLib && line.Equals("Pause()") || line.Equals("Stop()") || line.StartsWith("Goto") || line.StartsWith("Delay"))
-                    {
-                        Console.WriteLine("Error at line " + i + ": Library not imported!");
-                        break;
+                        if (line.Equals("Pause()") || line.Equals("Stop()") || line.StartsWith("Goto(") || line.StartsWith("Delay("))
+                        {
+                            Console.WriteLine("Error at line " + i + ": Library not imported!");
+                            break;
+                        }
                     }
 
                     if (line.Contains(";"))
@@ -388,9 +466,11 @@ namespace _9xCode
                 switch (endKey)
                 {
                     case ConsoleKey.R:
+                        Console.WriteLine("Debug: Run");
                         goto run;
                     case ConsoleKey.C:
                         Console.Clear();
+                        Console.WriteLine("Debug: Clear");
                         goto readagain;
                     case ConsoleKey.Escape:
                         break;
