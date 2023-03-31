@@ -10,6 +10,8 @@ namespace _9xCode
 {
     internal static class Program
     {
+        // Beta 1
+
         static Dictionary<string, ConsoleColor> StringToConsoleColor = new Dictionary<string, ConsoleColor>()
         {
             { "Black", Black }, { "DarkBlue", DarkBlue },
@@ -46,10 +48,9 @@ namespace _9xCode
                 {
                     string line = code[i].Trim();
 
-                    if (line.EndsWith(";"))
+                    if (line.StartsWith(";"))
                     {
-                        Console.WriteLine("Error at line " + i + ": ; not expected!");
-                        break;
+                        continue;
                     }
 
                     if (line.StartsWith("import"))
@@ -249,23 +250,23 @@ namespace _9xCode
                             {
                                 if (line.Substring(line.IndexOf('(') + 1, 1) == "\"")
                                 {
-                                    Console.WriteLine(line.Substring(start + 2, end - 3));
+                                    Console.Write(line.Substring(start + 2, end - 3));
                                 }
                                 else if (Integers.TryGetValue(line.Substring(start + 1, end - 1), out int intval))
                                 {
-                                    Console.WriteLine(intval);
+                                    Console.Write(intval);
                                 }
                                 else if (Strings.TryGetValue(line.Substring(start + 1, end - 1), out string strval))
                                 {
-                                    Console.WriteLine(strval);
+                                    Console.Write(strval);
                                 }
                                 else if (Booleans.TryGetValue(line.Substring(start + 1, end - 1), out bool bolval))
                                 {
-                                    Console.WriteLine(bolval);
+                                    Console.Write(bolval);
                                 }
                                 else
                                 {
-                                    Console.WriteLine(line.Substring(start + 1, end - 2));
+                                    Console.Write(line.Substring(start + 1, end - 2));
                                 }
                             }
 
@@ -349,37 +350,36 @@ namespace _9xCode
                         }
                     }
 
-                    if (SysLib)
+                    if (line.Equals("Stop()") && SysLib)
                     {
-                        if (line.Equals("Stop()"))
-                        {
-                            break;
-                        }
-
-                        if (line.StartsWith("Goto"))
-                        {
-                            int start = line.IndexOf('(');
-                            int end = line.IndexOf(')') - start;
-                            int lineToGoTo = Convert.ToInt32(line.Substring(start + 1, end - 1));
-
-                            i = lineToGoTo;
-                        }
-
-                        if (line.StartsWith("Delay"))
-                        {
-                            int start = line.IndexOf('(');
-                            int end = line.IndexOf(')') - start;
-
-                            Thread.Sleep(Convert.ToInt32(line.Substring(start + 1, end - 1)));
-                        }
+                        break;
                     }
-                    else
+
+                    else if (line.StartsWith("Goto") && SysLib)
                     {
-                        if (line.Equals("Pause()") || line.Equals("Stop()") || line.StartsWith("Goto") || line.StartsWith("Delay"))
-                        {
-                            Console.WriteLine("Error at line " + i + ": Library not imported!");
-                            break;
-                        }
+                        int start = line.IndexOf('(');
+                        int end = line.IndexOf(')') - start;
+                        int lineToGoTo = Convert.ToInt32(line.Substring(start + 1, end - 1));
+
+                        i = lineToGoTo;
+                    }
+
+                    else if (line.StartsWith("Delay") && SysLib)
+                    {
+                        int start = line.IndexOf('(');
+                        int end = line.IndexOf(')') - start;
+
+                        Thread.Sleep(Convert.ToInt32(line.Substring(start + 1, end - 1)));
+                    }
+                    else if (!SysLib && line.Equals("Pause()") || line.Equals("Stop()") || line.StartsWith("Goto") || line.StartsWith("Delay"))
+                    {
+                        Console.WriteLine("Error at line " + i + ": Library not imported!");
+                        break;
+                    }
+
+                    if (line.Contains(";"))
+                    {
+                        continue;
                     }
                 }
 
