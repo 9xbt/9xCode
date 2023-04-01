@@ -10,8 +10,6 @@ using static System.ConsoleColor;
 
 namespace _9xCode
 {
-    // ToDo: make empty variables possible: string test
-
     internal static class Program
     {
         // Beta 2
@@ -88,14 +86,15 @@ namespace _9xCode
                         continue;
                     }
 
-                    else if (line.StartsWith(";"))
+                    else if (line.Contains(";"))
                     {
-                        continue;
+                        int start = line.IndexOf(';');
+                        line = line.Remove(start).Trim();
                     }
 
                     // Default library
 
-                    else if (line.StartsWith("import"))
+                    if (line.StartsWith("import"))
                     {
                         string sub = line.Substring(7);
 
@@ -187,28 +186,42 @@ namespace _9xCode
                         }
                     }
 
-                    else if (line.StartsWith("string"))
+                    else if (line.StartsWith("String"))
                     {
-                        string key = line.Substring(7, line.IndexOf(" =") - 7);
+                        if (line.Contains('='))
+                        {
+                            string key = line.Substring(7, line.IndexOf(" =") - 7);
 
-                        if (Strings.ContainsKey(key))
-                        {
-                            Strings.Remove(key);
-                        }
+                            if (Strings.ContainsKey(key))
+                            {
+                                Strings.Remove(key);
+                            }
 
-                        if (line.Substring(line.IndexOf("= ") + 2).StartsWith("Read()"))
-                        {
-                            string consoleLine = Console.ReadKey(true).Key.ToString();
-                            Strings.Add(key, consoleLine);
-                        }
-                        else if (line.Substring(line.IndexOf("= ") + 2).StartsWith("ReadLine()"))
-                        {
-                            string consoleLine = Console.ReadLine();
-                            Strings.Add(key, consoleLine);
+                            if (line.Substring(line.IndexOf("= ") + 2).StartsWith("Read()"))
+                            {
+                                string consoleLine = Console.ReadKey(true).Key.ToString();
+                                Strings.Add(key, consoleLine);
+                            }
+                            else if (line.Substring(line.IndexOf("= ") + 2).StartsWith("ReadLine()"))
+                            {
+                                string consoleLine = Console.ReadLine();
+                                Strings.Add(key, consoleLine);
+                            }
+                            else
+                            {
+                                Strings.Add(key, line.Substring(line.IndexOf("\"") + 1, line.LastIndexOf("\"") - (line.IndexOf("\"") + 1)));
+                            }
                         }
                         else
                         {
-                            Strings.Add(key, line.Substring(line.IndexOf("\"") + 1, line.LastIndexOf("\"") - (line.IndexOf("\"") + 1)));
+                            string key = line.Substring(7);
+
+                            if (Strings.ContainsKey(key))
+                            {
+                                Strings.Remove(key);
+                            }
+
+                            Strings.Add(key, "");
                         }
                     }
 
@@ -296,7 +309,7 @@ namespace _9xCode
 
                     // Console library
 
-                    else if (ConsoleLib && line.StartsWith("write(") || ConsoleLib && line.StartsWith("print("))
+                    else if (ConsoleLib && line.StartsWith("Write(") || ConsoleLib && line.StartsWith("Print("))
                     {
                         int start = line.IndexOf('(');
                         int end = line.IndexOf(')') - start;
@@ -422,28 +435,28 @@ namespace _9xCode
                             }
                         }
 
-                        if (line.StartsWith("print("))
+                        if (line.StartsWith("Print("))
                         {
                             Console.Write('\n');
                         }
                     }
 
-                    else if (ConsoleLib && line.Equals("clear()"))
+                    else if (ConsoleLib && line.Equals("Clear()"))
                     {
                         Console.Clear();
                     }
 
-                    else if (ConsoleLib && line.Equals("read()"))
+                    else if (ConsoleLib && line.Equals("Read()"))
                     {
                         Console.ReadKey();
                     }
 
-                    else if (ConsoleLib && line.Equals("readLine()"))
+                    else if (ConsoleLib && line.Equals("ReadLine()"))
                     {
                         Console.ReadLine();
                     }
 
-                    else if (ConsoleLib && line.StartsWith("foreColor = "))
+                    else if (ConsoleLib && line.StartsWith("ForeColor = "))
                     {
                         if (StringToConsoleColor.TryGetValue(line.Substring(12), out ConsoleColor clrval))
                         {
@@ -458,7 +471,7 @@ namespace _9xCode
                         }
                     }
 
-                    else if (ConsoleLib && line.StartsWith("backColor = "))
+                    else if (ConsoleLib && line.StartsWith("BackColor = "))
                     {
                         if (StringToConsoleColor.TryGetValue(line.Substring(12), out ConsoleColor clrval))
                         {
@@ -473,7 +486,7 @@ namespace _9xCode
                         }
                     }
 
-                    else if (ConsoleLib && line.StartsWith("cursorX = "))
+                    else if (ConsoleLib && line.StartsWith("CursorX = "))
                     {
                         if (Integers.TryGetValue(line.Substring(10), out int intval))
                         {
@@ -495,7 +508,7 @@ namespace _9xCode
                         }
                     }
 
-                    else if (ConsoleLib && line.StartsWith("cursorY = "))
+                    else if (ConsoleLib && line.StartsWith("CursorY = "))
                     {
                         if (Integers.TryGetValue(line.Substring(10), out int intval))
                         {
@@ -517,7 +530,7 @@ namespace _9xCode
                         }
                     }
 
-                    else if (ConsoleLib && line.StartsWith("cursor = "))
+                    else if (ConsoleLib && line.StartsWith("Cursor = "))
                     {
                         if (Booleans.TryGetValue(line.Substring(9), out bool intval))
                         {
@@ -541,13 +554,13 @@ namespace _9xCode
 
                     // IO library
 
-                    else if (IOLib && line.StartsWith("create"))
+                    else if (IOLib && line.StartsWith("Create"))
                     {
                         int start = line.IndexOf('(');
                         int end = line.IndexOf(')') - start;
                         string sub = line.Substring(start + 2, end - 3);
 
-                        if (line.StartsWith("createFile("))
+                        if (line.StartsWith("CreateFile("))
                         {
                             try
                             {
@@ -569,7 +582,7 @@ namespace _9xCode
                             }
                         }
 
-                        else if (line.StartsWith("createDir("))
+                        else if (line.StartsWith("CreateDir("))
                         {
                             try
                             {
@@ -589,7 +602,7 @@ namespace _9xCode
                         }
                     }
 
-                    else if (IOLib && line.StartsWith("writeFile("))
+                    else if (IOLib && line.StartsWith("WriteFile("))
                     {
                         int start1 = line.IndexOf('(');
                         int end1 = line.IndexOf(',') - start1;
@@ -623,7 +636,7 @@ namespace _9xCode
 
                     // System library
 
-                    else if (SysLib && line.StartsWith("call"))
+                    else if (SysLib && line.StartsWith("Call"))
                     {
                         int start1 = line.IndexOf('(');
                         int end1 = line.IndexOf(',') - start1;
@@ -636,31 +649,24 @@ namespace _9xCode
                         Process.Start(sub1.Trim(), sub2.Trim());
                     }
 
-                    else if (SysLib && line.StartsWith("stop()"))
+                    else if (SysLib && line.StartsWith("Stop()"))
                     {
                         break;
                     }
 
-                    else if (SysLib && line.StartsWith("goto("))
+                    else if (SysLib && line.StartsWith("Goto("))
                     {
                         int start = line.IndexOf('(');
                         int end = line.IndexOf(')') - start;
-                        i = Convert.ToInt32(line.Substring(start + 1, end - 1));
+                        i = Convert.ToInt32(line.Substring(start + 1, end - 1)) - 2;
                     }
 
-                    else if (SysLib && line.StartsWith("delay("))
+                    else if (SysLib && line.StartsWith("Delay("))
                     {
                         int start = line.IndexOf('(');
                         int end = line.IndexOf(')') - start;
 
                         Thread.Sleep(Convert.ToInt32(line.Substring(start + 1, end - 1)));
-                    }
-
-                    // Comments
-
-                    else if (line.Contains(";"))
-                    {
-                        continue;
                     }
 
                     // Syntax error detection
@@ -671,30 +677,6 @@ namespace _9xCode
                         Console.WriteLine("Syntax error at line " + (i + 1) + ": Unknown function/variable");
                         Console.ForegroundColor = White;
                         break;
-                    }
-
-                    // Library error detection
-
-                    if (!ConsoleLib)
-                    {
-                        if (line.StartsWith("write(") || line.StartsWith("print(") || line.Equals("clear()") || line.StartsWith("foreColor = ") || line.StartsWith("backColor = ") || line.StartsWith("cursorX = ") || line.StartsWith("cursorY = ") || line.StartsWith("cursor = "))
-                        {
-                            Console.ForegroundColor = Red;
-                            Console.WriteLine("Error at line " + (i + 1) + ": Console library not imported");
-                            Console.ForegroundColor = White;
-                            break;
-                        }
-                    }
-
-                    else if (!SysLib)
-                    {
-                        if (line.StartsWith("goto(") || line.Equals("stop()") || line.StartsWith("goto(") || line.StartsWith("delay("))
-                        {
-                            Console.ForegroundColor = Red;
-                            Console.WriteLine("Error at line " + (i + 1) + ": System library not imported");
-                            Console.ForegroundColor = White;
-                            break;
-                        }
                     }
                 }
 
