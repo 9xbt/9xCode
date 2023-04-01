@@ -86,6 +86,11 @@ namespace _9xCode
                         continue;
                     }
 
+                    else if (line.StartsWith(";"))
+                    {
+                        continue;
+                    }
+
                     else if (line.Contains(";"))
                     {
                         int start = line.IndexOf(';');
@@ -320,46 +325,22 @@ namespace _9xCode
                             string result = "";
                             foreach (string c in contents)
                             {
-                                if (TimeLib)
+                                if (c.Trim() == "Seconds")
                                 {
-                                    if (c.Trim() == "Seconds")
-                                    {
-                                        result += DateTime.Now.Second;
-                                    }
-                                    else if (c.Trim() == "Minutes")
-                                    {
-                                        result += DateTime.Now.Minute;
-                                    }
-                                    else if (c.Trim() == "Hours")
-                                    {
-                                        result += DateTime.Now.Hour;
-                                    }
-                                    else
-                                    {
-                                        goto other;
-                                    }
+                                    result += DateTime.Now.Second;
                                 }
-                                else
+                                else if (c.Trim() == "Minutes")
                                 {
-                                    if (c.Trim() == "Seconds" || c.Trim() == "Minutes" || c.Trim() == "Hours")
-                                    {
-                                        Console.ForegroundColor = Red;
-                                        Console.WriteLine("Error at line " + (i + 1) + ": Time library not imported");
-                                        Console.ForegroundColor = White;
-                                        break;
-                                    }
+                                    result += DateTime.Now.Minute;
                                 }
-
-                            other:
-                                if (c.Trim().Contains('"'))
+                                else if (c.Trim() == "Hours")
+                                {
+                                    result += DateTime.Now.Hour;
+                                }
+                                else if (c.Trim().Contains('"'))
                                 {
                                     string thing = c.Trim();
                                     thing = thing.Substring(1, thing.LastIndexOf('"') - 1);
-                                    result += thing;
-                                }
-                                else if (!c.Trim().Contains('"'))
-                                {
-                                    string thing = c.Trim();
                                     result += thing;
                                 }
                                 else if (Integers.TryGetValue(c.Trim(), out int intval))
@@ -374,6 +355,22 @@ namespace _9xCode
                                 {
                                     result += bolval;
                                 }
+                                else
+                                {
+                                    string thing = c.Trim();
+                                    result += thing;
+                                }
+
+                                if (!TimeLib)
+                                {
+                                    if (c.Trim() == "Seconds" || c.Trim() == "Minutes" || c.Trim() == "Hours")
+                                    {
+                                        Console.ForegroundColor = Red;
+                                        Console.WriteLine("Error at line " + (i + 1) + ": Time library not imported");
+                                        Console.ForegroundColor = White;
+                                        break;
+                                    }
+                                }
                             }
 
                             Console.Write(result);
@@ -382,38 +379,19 @@ namespace _9xCode
                         {
                             string sub = line.Substring(start + 1, end - 1);
 
-                            if (TimeLib)
+                            if (TimeLib && sub == "Seconds")
                             {
-                                if (sub == "Seconds")
-                                {
-                                    Console.Write(DateTime.Now.Second);
-                                }
-                                else if (sub == "Minutes")
-                                {
-                                    Console.Write(DateTime.Now.Minute);
-                                }
-                                else if (sub == "Hours")
-                                {
-                                    Console.Write(DateTime.Now.Hour);
-                                }
-                                else
-                                {
-                                    goto other;
-                                }
+                                Console.Write(DateTime.Now.Second);
                             }
-                            else
+                            else if (TimeLib && sub == "Minutes")
                             {
-                                if (sub == "Seconds" || sub == "Minutes" || sub == "Hours")
-                                {
-                                    Console.ForegroundColor = Red;
-                                    Console.WriteLine("Error at line " + (i + 1) + ": Time library not imported");
-                                    Console.ForegroundColor = White;
-                                    break;
-                                }
+                                Console.Write(DateTime.Now.Minute);
                             }
-
-                        other:
-                            if (line.Substring(start + 1, 1) == "\"")
+                            else if (TimeLib && sub == "Hours")
+                            {
+                                Console.Write(DateTime.Now.Hour);
+                            }
+                            else if (line.Substring(start + 1, 1) == "\"")
                             {
                                 Console.Write(line.Substring(start + 2, end - 3));
                             }
@@ -432,6 +410,17 @@ namespace _9xCode
                             else
                             {
                                 Console.Write(line.Substring(start + 1, end - 1));
+                            }
+
+                            if (!TimeLib)
+                            {
+                                if (sub == "Seconds" || sub == "Minutes" || sub == "Hours")
+                                {
+                                    Console.ForegroundColor = Red;
+                                    Console.WriteLine("Error at line " + (i + 1) + ": Time library not imported");
+                                    Console.ForegroundColor = White;
+                                    break;
+                                }
                             }
                         }
 
@@ -518,7 +507,7 @@ namespace _9xCode
                         {
                             try
                             {
-                                Console.CursorLeft = Convert.ToInt32(line.Substring(10));
+                                Console.CursorTop = Convert.ToInt32(line.Substring(10));
                             }
                             catch
                             {
