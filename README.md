@@ -6,4 +6,4 @@ How to use:
 2. Hit "Start"
 3. Open your .9xc file and let it run
 
-I will add documentation soon
+9xCode is still in in beta, there could be some bugs
