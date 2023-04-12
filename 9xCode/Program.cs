@@ -91,6 +91,11 @@ namespace _9xCode
                         continue;
                     }
 
+                    else if (line.StartsWith("endif"))
+                    {
+                        continue;
+                    }
+
                     else if (line.Contains(";"))
                     {
                         int start = line.IndexOf(';');
@@ -154,22 +159,7 @@ namespace _9xCode
                             Integers.Remove(key);
                         }
 
-                        if (TimeLib)
-                        {
-                            if (sub.StartsWith("Seconds"))
-                            {
-                                Integers.Add(key, DateTime.Now.Second);
-                            }
-                            else if (sub.StartsWith("Minutes"))
-                            {
-                                Integers.Add(key, DateTime.Now.Minute);
-                            }
-                            else if (sub.StartsWith("Hours"))
-                            {
-                                Integers.Add(key, DateTime.Now.Hour);
-                            }
-                        }
-                        else
+                        if (!TimeLib)
                         {
                             if (sub.StartsWith("Seconds") || sub.StartsWith("Minutes") || sub.Equals("Hours"))
                             {
@@ -180,7 +170,19 @@ namespace _9xCode
                             }
                         }
 
-                        if (sub.StartsWith("0x"))
+                        if (TimeLib && sub.StartsWith("Seconds"))
+                        {
+                            Integers.Add(key, DateTime.Now.Second);
+                        }
+                        else if (TimeLib && sub.StartsWith("Minutes"))
+                        {
+                            Integers.Add(key, DateTime.Now.Minute);
+                        }
+                        else if (TimeLib && sub.StartsWith("Hours"))
+                        {
+                            Integers.Add(key, DateTime.Now.Hour);
+                        }
+                        else if (sub.StartsWith("0x"))
                         {
                             line.Remove(0, 2);
                             Integers.Add(key, Convert.ToInt32(line.Substring(line.IndexOf("= ") + 2), 16));
@@ -307,11 +309,6 @@ namespace _9xCode
                         }
                     }
 
-                    else if (line.StartsWith("endif"))
-                    {
-                        continue;
-                    }
-
                     // Console library
 
                     else if (ConsoleLib && line.StartsWith("Write(") || ConsoleLib && line.StartsWith("Print("))
@@ -323,47 +320,13 @@ namespace _9xCode
                         {
                             string[] contents = line.Substring(start + 1, end - 1).Split('+');
                             string result = "";
-                            foreach (string c in contents)
+                            for (int o = 0; o < contents.Length; o++)
                             {
-                                if (c.Trim() == "Seconds")
-                                {
-                                    result += DateTime.Now.Second;
-                                }
-                                else if (c.Trim() == "Minutes")
-                                {
-                                    result += DateTime.Now.Minute;
-                                }
-                                else if (c.Trim() == "Hours")
-                                {
-                                    result += DateTime.Now.Hour;
-                                }
-                                else if (c.Trim().Contains('"'))
-                                {
-                                    string thing = c.Trim();
-                                    thing = thing.Substring(1, thing.LastIndexOf('"') - 1);
-                                    result += thing;
-                                }
-                                else if (Integers.TryGetValue(c.Trim(), out int intval))
-                                {
-                                    result += intval;
-                                }
-                                else if (Strings.TryGetValue(c.Trim(), out string strval))
-                                {
-                                    result += strval;
-                                }
-                                else if (Booleans.TryGetValue(c.Trim(), out bool bolval))
-                                {
-                                    result += bolval;
-                                }
-                                else
-                                {
-                                    string thing = c.Trim();
-                                    result += thing;
-                                }
+                                string sub = contents[o].Trim();
 
                                 if (!TimeLib)
                                 {
-                                    if (c.Trim() == "Seconds" || c.Trim() == "Minutes" || c.Trim() == "Hours")
+                                    if (sub == "Seconds" || sub == "Minutes" || sub == "Hours")
                                     {
                                         Console.ForegroundColor = Red;
                                         Console.WriteLine("Error at line " + (i + 1) + ": Time library not imported");
@@ -371,13 +334,60 @@ namespace _9xCode
                                         break;
                                     }
                                 }
+
+                                if (sub == "Seconds")
+                                {
+                                    result += DateTime.Now.Second;
+                                }
+                                else if (sub == "Minutes")
+                                {
+                                    result += DateTime.Now.Minute;
+                                }
+                                else if (sub == "Hours")
+                                {
+                                    result += DateTime.Now.Hour;
+                                }
+                                else if (sub.Contains('"'))
+                                {
+                                    string thing = sub;
+                                    thing = thing.Substring(1, thing.LastIndexOf('"') - 1);
+                                    result += thing;
+                                }
+                                else if (Integers.TryGetValue(sub, out int intval))
+                                {
+                                    result += intval;
+                                }
+                                else if (Strings.TryGetValue(sub, out string strval))
+                                {
+                                    result += strval;
+                                }
+                                else if (Booleans.TryGetValue(sub, out bool bolval))
+                                {
+                                    result += bolval;
+                                }
+                                else
+                                {
+                                    string thing = sub;
+                                    result += thing;
+                                }
                             }
 
                             Console.Write(result);
                         }
                         else
                         {
-                            string sub = line.Substring(start + 1, end - 1);
+                            string sub = line.Substring(start + 1, end - 1).Trim();
+
+                            if (!TimeLib)
+                            {
+                                if (sub == "Seconds" || sub == "Minutes" || sub == "Hours")
+                                {
+                                    Console.ForegroundColor = Red;
+                                    Console.WriteLine("Error at line " + (i + 1) + ": Time library not imported");
+                                    Console.ForegroundColor = White;
+                                    break;
+                                }
+                            }
 
                             if (TimeLib && sub == "Seconds")
                             {
@@ -412,16 +422,7 @@ namespace _9xCode
                                 Console.Write(line.Substring(start + 1, end - 1));
                             }
 
-                            if (!TimeLib)
-                            {
-                                if (sub == "Seconds" || sub == "Minutes" || sub == "Hours")
-                                {
-                                    Console.ForegroundColor = Red;
-                                    Console.WriteLine("Error at line " + (i + 1) + ": Time library not imported");
-                                    Console.ForegroundColor = White;
-                                    break;
-                                }
-                            }
+
                         }
 
                         if (line.StartsWith("Print("))
@@ -551,75 +552,29 @@ namespace _9xCode
 
                         if (line.StartsWith("CreateFile("))
                         {
-                            try
+                            using (FileStream stream = new FileStream(sub, FileMode.Create))
                             {
-                                using (FileStream stream = new FileStream(sub, FileMode.Create))
-                                {
-                                    stream.Close();
-                                }
-                            }
-                            catch (UnauthorizedAccessException)
-                            {
-                                using (Process configTool = new Process())
-                                {
-                                    configTool.StartInfo.FileName = Application.ExecutablePath;
-                                    configTool.StartInfo.Arguments = $"/CREATEFILE {sub}";
-                                    configTool.StartInfo.Verb = "runas";
-                                    configTool.Start();
-                                    configTool.WaitForExit();
-                                }
+                                stream.Close();
                             }
                         }
 
                         else if (line.StartsWith("CreateDir("))
                         {
-                            try
-                            {
-                                Directory.CreateDirectory(sub);
-                            }
-                            catch (UnauthorizedAccessException)
-                            {
-                                using (Process configTool = new Process())
-                                {
-                                    configTool.StartInfo.FileName = Application.ExecutablePath;
-                                    configTool.StartInfo.Arguments = $"/CREATEDIR {sub}";
-                                    configTool.StartInfo.Verb = "runas";
-                                    configTool.Start();
-                                    configTool.WaitForExit();
-                                }
-                            }
+                            Directory.CreateDirectory(sub);
                         }
                     }
 
                     else if (IOLib && line.StartsWith("WriteFile("))
                     {
-                        int start1 = line.IndexOf('(');
-                        int end1 = line.IndexOf(',') - start1;
-                        string sub1 = line.Substring(start1 + 2, end1 - 3);
+                        int start1 = line.IndexOf('('), start2 = line.IndexOf(',');
+                        int end1 = line.IndexOf(',') - start1, end2 = line.IndexOf(')') - start2;
+                        string sub1 = line.Substring(start1 + 2, end1 - 3), sub2 = line.Substring(start2 + 3, end2 - 4);
 
-                        int start2 = line.IndexOf(',');
-                        int end2 = line.IndexOf(')') - start2;
-                        string sub2 = line.Substring(start2 + 3, end2 - 4);
-
-                        try
+                        using (FileStream stream = new FileStream(sub1, FileMode.Open))
                         {
-                            using (FileStream stream = new FileStream(sub1, FileMode.Open))
-                            {
-                                var data = sub2;
-                                byte[] bytes = Encoding.UTF8.GetBytes(data);
-                                stream.Write(bytes, 0, bytes.Length);
-                            }
-                        }
-                        catch (UnauthorizedAccessException)
-                        {
-                            using (Process configTool = new Process())
-                            {
-                                configTool.StartInfo.FileName = Application.ExecutablePath;
-                                configTool.StartInfo.Arguments = $"/WRITE {sub1} {sub2}";
-                                configTool.StartInfo.Verb = "runas";
-                                configTool.Start();
-                                configTool.WaitForExit();
-                            }
+                            var data = sub2;
+                            byte[] bytes = Encoding.UTF8.GetBytes(data);
+                            stream.Write(bytes, 0, bytes.Length);
                         }
                     }
 
@@ -627,13 +582,9 @@ namespace _9xCode
 
                     else if (SysLib && line.StartsWith("Call"))
                     {
-                        int start1 = line.IndexOf('(');
-                        int end1 = line.IndexOf(',') - start1;
-                        string sub1 = line.Substring(start1 + 1, end1 - 1);
-
-                        int start2 = line.IndexOf(',');
-                        int end2 = line.IndexOf(')') - start2;
-                        string sub2 = line.Substring(start2 + 3, end2 - 3);
+                        int start1 = line.IndexOf('('), start2 = line.IndexOf(',');
+                        int end1 = line.IndexOf(',') - start1, end2 = line.IndexOf(')') - start2;
+                        string sub1 = line.Substring(start1 + 1, end1 - 1), sub2 = line.Substring(start2 + 3, end2 - 3);
 
                         Process.Start(sub1.Trim(), sub2.Trim());
                     }
