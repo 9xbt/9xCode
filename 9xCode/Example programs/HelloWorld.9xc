@@ -1,3 +1,3 @@
-﻿import Console
+﻿import Windows
 
-Print("Hello World!")
+MsgBox("9xCode", "Hello World!")

@@ -12,7 +12,7 @@ namespace _9xCode
 {
     internal static class Program
     {
-        // Beta 2
+        // Copyright © 2023 Mobren
 
         static Dictionary<string, ConsoleColor> StringToConsoleColor = new Dictionary<string, ConsoleColor>()
         {
@@ -27,47 +27,19 @@ namespace _9xCode
         };
 
         [STAThread]
-        static void Main(string[] args)
+        static void Main()
         {
             Console.ForegroundColor = White;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (args[i].Trim().StartsWith("/CREATEFILE"))
-                {
-                    using (FileStream stream = new FileStream(args[i + 1], FileMode.Create))
-                    {
-                        stream.Close();
-                    }
-                    Environment.Exit(0);
-                }
-
-                else if (args[i].Trim().StartsWith("/CREATEDIR"))
-                {
-                    Directory.CreateDirectory(args[i + 1]);
-                    Environment.Exit(0);
-                }
-
-                else if (args[i].Trim().StartsWith("/WRITE"))
-                {
-                    using (FileStream stream = new FileStream(args[i + 2], FileMode.Open))
-                    {
-                        var data = args[i + 1];
-                        byte[] bytes = Encoding.UTF8.GetBytes(data);
-                        stream.Write(bytes, 0, bytes.Length);
-                    }
-                }
-            }
 
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = "9xCode Files (.9xc)|*.9xc";
             if (dialog.ShowDialog() == DialogResult.OK)
             {
 
-            run:
-                bool SysLib = false, ConsoleLib = false, IOLib = false, TimeLib = false;
+            Run:
+                bool SysLib = false, ConsoleLib = false, IOLib = false, TimeLib = false, WinLib = false;
 
                 Dictionary<string, bool> Booleans = new Dictionary<string, bool>() { };
                 Dictionary<string, int> Integers = new Dictionary<string, int>() { };
@@ -79,7 +51,7 @@ namespace _9xCode
                 {
                     string line = code[i].Trim();
 
-                    // Comments & Empty lines
+                    #region Default library
 
                     if (line == string.Empty)
                     {
@@ -101,8 +73,6 @@ namespace _9xCode
                         int start = line.IndexOf(';');
                         line = line.Remove(start).Trim();
                     }
-
-                    // Default library
 
                     if (line.StartsWith("import"))
                     {
@@ -128,6 +98,11 @@ namespace _9xCode
                             TimeLib = true;
                         }
 
+                        else if (sub.StartsWith("Windows"))
+                        {
+                            WinLib = true;
+                        }
+
                         else
                         {
                             Console.ForegroundColor = Red;
@@ -137,7 +112,7 @@ namespace _9xCode
                         }
                     }
 
-                    else if (line.StartsWith("bool"))
+                    else if (line.StartsWith("Bool"))
                     {
                         string key = line.Substring(5, line.IndexOf(" =") - 5);
 
@@ -149,7 +124,7 @@ namespace _9xCode
                         Booleans.Add(key, Convert.ToBoolean(line.Substring(line.IndexOf("= ") + 2)));
                     }
 
-                    else if (line.StartsWith("int"))
+                    else if (line.StartsWith("Int"))
                     {
                         string key = line.Substring(4, line.IndexOf(" =") - 4);
                         string sub = line.Substring(line.IndexOf("= ") + 2);
@@ -204,7 +179,29 @@ namespace _9xCode
                                 Strings.Remove(key);
                             }
 
-                            if (line.Substring(line.IndexOf("= ") + 2).StartsWith("Read()"))
+                            if (!IOLib)
+                            {
+                                if (line.Substring(line.IndexOf("= ") + 2).StartsWith("OpenFile"))
+                                {
+                                    Console.ForegroundColor = Red;
+                                    Console.WriteLine("Error at line " + (i + 1) + ": IO library not imported");
+                                    Console.ForegroundColor = White;
+                                    break;
+                                }
+                            }
+
+                            if (IOLib && line.Substring(line.IndexOf("= ") + 2).StartsWith("ReadFile"))
+                            {
+                                string thing = line.Substring(line.IndexOf("(") + 1, line.IndexOf(")") - (line.IndexOf("(") + 1));
+
+                                if (Strings.TryGetValue(thing, out string strval))
+                                {
+                                    thing = strval;
+                                }
+
+                                Strings.Add(key, File.ReadAllText(thing));
+                            }
+                            else if (line.Substring(line.IndexOf("= ") + 2).StartsWith("Read()"))
                             {
                                 string consoleLine = Console.ReadKey(true).Key.ToString();
                                 Strings.Add(key, consoleLine);
@@ -309,9 +306,44 @@ namespace _9xCode
                         }
                     }
 
-                    // Console library
+                    #endregion
 
-                    else if (ConsoleLib && line.StartsWith("Write(") || ConsoleLib && line.StartsWith("Print("))
+                    #region System library
+
+                    else if (SysLib && line.StartsWith("Call"))
+                    {
+                        int start1 = line.IndexOf('('), start2 = line.IndexOf(',');
+                        int end1 = line.IndexOf(',') - start1, end2 = line.IndexOf(')') - start2;
+                        string sub1 = line.Substring(start1 + 1, end1 - 1), sub2 = line.Substring(start2 + 3, end2 - 3);
+
+                        Process.Start(sub1.Trim(), sub2.Trim());
+                    }
+
+                    else if (SysLib && line.StartsWith("Stop()"))
+                    {
+                        break;
+                    }
+
+                    else if (SysLib && line.StartsWith("Goto("))
+                    {
+                        int start = line.IndexOf('(');
+                        int end = line.IndexOf(')') - start;
+                        i = Convert.ToInt32(line.Substring(start + 1, end - 1)) - 2;
+                    }
+
+                    else if (SysLib && line.StartsWith("Delay("))
+                    {
+                        int start = line.IndexOf('(');
+                        int end = line.IndexOf(')') - start;
+
+                        Thread.Sleep(Convert.ToInt32(line.Substring(start + 1, end - 1)));
+                    }
+
+                    #endregion
+
+                    #region Console library
+
+                    else if (ConsoleLib && line.StartsWith("Write") || ConsoleLib && line.StartsWith("Print"))
                     {
                         int start = line.IndexOf('(');
                         int end = line.IndexOf(')') - start;
@@ -421,8 +453,6 @@ namespace _9xCode
                             {
                                 Console.Write(line.Substring(start + 1, end - 1));
                             }
-
-
                         }
 
                         if (line.StartsWith("Print("))
@@ -438,7 +468,7 @@ namespace _9xCode
 
                     else if (ConsoleLib && line.Equals("Read()"))
                     {
-                        Console.ReadKey();
+                        Console.ReadKey(true);
                     }
 
                     else if (ConsoleLib && line.Equals("ReadLine()"))
@@ -542,15 +572,26 @@ namespace _9xCode
                         }
                     }
 
-                    // IO library
+                    #endregion
 
-                    else if (IOLib && line.StartsWith("Create"))
+                    #region IO library
+
+                    else if (IOLib && line.StartsWith("Mk"))
                     {
                         int start = line.IndexOf('(');
                         int end = line.IndexOf(')') - start;
-                        string sub = line.Substring(start + 2, end - 3);
+                        string sub = string.Empty;
 
-                        if (line.StartsWith("CreateFile("))
+                        if (Strings.TryGetValue(line.Substring(line.IndexOf("(") + 1, line.IndexOf(")") - (line.IndexOf("(") + 1)), out string strval))
+                        {
+                            sub = strval;
+                        }
+                        else
+                        {
+                            sub = line.Substring(start + 2, end - 3);
+                        }
+
+                        if (line.StartsWith("MkFile"))
                         {
                             using (FileStream stream = new FileStream(sub, FileMode.Create))
                             {
@@ -558,58 +599,61 @@ namespace _9xCode
                             }
                         }
 
-                        else if (line.StartsWith("CreateDir("))
+                        else if (line.StartsWith("MkDir"))
                         {
                             Directory.CreateDirectory(sub);
                         }
                     }
 
-                    else if (IOLib && line.StartsWith("WriteFile("))
+                    else if (IOLib && line.StartsWith("WrFile"))
                     {
                         int start1 = line.IndexOf('('), start2 = line.IndexOf(',');
                         int end1 = line.IndexOf(',') - start1, end2 = line.IndexOf(')') - start2;
-                        string sub1 = line.Substring(start1 + 2, end1 - 3), sub2 = line.Substring(start2 + 3, end2 - 4);
+
+                        string sub1 = line.Substring(start1 + 1, end1 - 1).Trim(), sub2 = line.Substring(start2 + 2, end2 - 2).Trim();
+
+                        if (Strings.TryGetValue(sub1, out string strval1))
+                        {
+                            sub1 = strval1;
+                        }
+
+                        if (Strings.TryGetValue(sub2, out string strval2))
+                        {
+                            sub2 = strval2;
+                        }
 
                         using (FileStream stream = new FileStream(sub1, FileMode.Open))
                         {
-                            var data = sub2;
-                            byte[] bytes = Encoding.UTF8.GetBytes(data);
+                            byte[] bytes = Encoding.UTF8.GetBytes(sub2);
                             stream.Write(bytes, 0, bytes.Length);
                         }
                     }
 
-                    // System library
+                    #endregion
 
-                    else if (SysLib && line.StartsWith("Call"))
+                    #region Windows library
+
+                    else if (WinLib && line.StartsWith("MsgBox"))
                     {
                         int start1 = line.IndexOf('('), start2 = line.IndexOf(',');
                         int end1 = line.IndexOf(',') - start1, end2 = line.IndexOf(')') - start2;
-                        string sub1 = line.Substring(start1 + 1, end1 - 1), sub2 = line.Substring(start2 + 3, end2 - 3);
 
-                        Process.Start(sub1.Trim(), sub2.Trim());
+                        string sub1 = line.Substring(start1 + 2, end1 - 3).Trim(), sub2 = line.Substring(start2 + 3, end2 - 4).Trim();
+
+                        if (Strings.TryGetValue(sub1, out string strval1))
+                        {
+                            sub1 = strval1;
+                        }
+
+                        if (Strings.TryGetValue(sub2, out string strval2))
+                        {
+                            sub2 = strval2;
+                        }
+
+                        MessageBox.Show(sub2, sub1);
                     }
 
-                    else if (SysLib && line.StartsWith("Stop()"))
-                    {
-                        break;
-                    }
-
-                    else if (SysLib && line.StartsWith("Goto("))
-                    {
-                        int start = line.IndexOf('(');
-                        int end = line.IndexOf(')') - start;
-                        i = Convert.ToInt32(line.Substring(start + 1, end - 1)) - 2;
-                    }
-
-                    else if (SysLib && line.StartsWith("Delay("))
-                    {
-                        int start = line.IndexOf('(');
-                        int end = line.IndexOf(')') - start;
-
-                        Thread.Sleep(Convert.ToInt32(line.Substring(start + 1, end - 1)));
-                    }
-
-                    // Syntax error detection
+                    #endregion
 
                     else
                     {
@@ -620,23 +664,8 @@ namespace _9xCode
                     }
                 }
 
-            readagain:
-                var endKey = Console.ReadKey(true).Key;
-                switch (endKey)
-                {
-                    case ConsoleKey.R:
-                        Console.WriteLine("Debug: Run");
-                        goto run;
-                    case ConsoleKey.C:
-                        Console.Clear();
-                        Console.WriteLine("Debug: Clear");
-                        goto readagain;
-                    case ConsoleKey.E:
-                        Console.WriteLine("Debug: Exit");
-                        break;
-                    default:
-                        goto readagain;
-                }
+                Thread.Sleep(500);
+                if (MessageBox.Show("Run again?", "9xCode", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK) goto Run;
             }
         }
     }
