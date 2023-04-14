@@ -11,4 +11,4 @@ If you want to use a pre-built version, do this:
 1. Download the 9xCode executable from the latest release
 2. Open your 9xCode script and let it run
 
-9xCode is still in in beta, please report all issues in the issues tab.
+9xCode is still in beta, so if you find any issues please report them in the issues tab.
