@@ -1,3 +1,0 @@
-﻿import Windows
-
-MsgBox("9xCode", "Hello World!")

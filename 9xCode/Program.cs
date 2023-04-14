@@ -51,6 +51,21 @@ namespace _9xCode
                 {
                     string line = code[i].Trim();
 
+                    if (ConsoleLib)
+                    {
+                        if (Integers.ContainsKey("CursorX"))
+                        {
+                            Integers.Remove("CursorX");
+                        }
+                        if (Integers.ContainsKey("CursorY"))
+                        {
+                            Integers.Remove("CursorY");
+                        }
+
+                        Integers.Add("CursorX", Console.CursorLeft);
+                        Integers.Add("CursorY", Console.CursorTop);
+                    }
+
                     #region Default library
 
                     if (line == string.Empty)
@@ -145,7 +160,7 @@ namespace _9xCode
                             }
                         }
 
-                        if (TimeLib && sub.StartsWith("Seconds"))
+                        else if (TimeLib && sub.StartsWith("Seconds"))
                         {
                             Integers.Add(key, DateTime.Now.Second);
                         }
@@ -203,13 +218,11 @@ namespace _9xCode
                             }
                             else if (line.Substring(line.IndexOf("= ") + 2).StartsWith("Read()"))
                             {
-                                string consoleLine = Console.ReadKey(true).Key.ToString();
-                                Strings.Add(key, consoleLine);
+                                Strings.Add(key, Console.ReadKey(true).Key.ToString());
                             }
                             else if (line.Substring(line.IndexOf("= ") + 2).StartsWith("ReadLine()"))
                             {
-                                string consoleLine = Console.ReadLine();
-                                Strings.Add(key, consoleLine);
+                                Strings.Add(key, Console.ReadLine());
                             }
                             else
                             {
@@ -328,7 +341,7 @@ namespace _9xCode
                     {
                         int start = line.IndexOf('(');
                         int end = line.IndexOf(')') - start;
-                        i = Convert.ToInt32(line.Substring(start + 1, end - 1)) - 2;
+                        i = Convert.ToInt32(line.Substring(start + 1, end - 1));
                     }
 
                     else if (SysLib && line.StartsWith("Delay("))
@@ -506,47 +519,69 @@ namespace _9xCode
                         }
                     }
 
-                    else if (ConsoleLib && line.StartsWith("CursorX = "))
+                    else if (ConsoleLib && line.StartsWith("CursorX"))
                     {
-                        if (Integers.TryGetValue(line.Substring(10), out int intval))
+                        if (line.Contains("="))
                         {
-                            Console.CursorLeft = intval;
+                            if (Integers.TryGetValue(line.Substring(10), out int intval))
+                            {
+                                Console.CursorLeft = intval;
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    Console.CursorLeft = Convert.ToInt32(line.Substring(10));
+                                }
+                                catch
+                                {
+                                    Console.ForegroundColor = Red;
+                                    Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a valid integer");
+                                    Console.ForegroundColor = White;
+                                    break;
+                                }
+                            }
                         }
-                        else
+                        else if (line.Contains("++"))
                         {
-                            try
-                            {
-                                Console.CursorLeft = Convert.ToInt32(line.Substring(10));
-                            }
-                            catch
-                            {
-                                Console.ForegroundColor = Red;
-                                Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a valid integer");
-                                Console.ForegroundColor = White;
-                                break;
-                            }
+                            Console.CursorTop++;
+                        }
+                        else if (line.Contains("--"))
+                        {
+                            Console.CursorTop--;
                         }
                     }
 
-                    else if (ConsoleLib && line.StartsWith("CursorY = "))
+                    else if (ConsoleLib && line.StartsWith("CursorY"))
                     {
-                        if (Integers.TryGetValue(line.Substring(10), out int intval))
+                        if (line.Contains("="))
                         {
-                            Console.CursorTop = intval;
+                            if (Integers.TryGetValue(line.Substring(10), out int intval))
+                            {
+
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    Console.CursorTop = Convert.ToInt32(line.Substring(10));
+                                }
+                                catch
+                                {
+                                    Console.ForegroundColor = Red;
+                                    Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a valid integer");
+                                    Console.ForegroundColor = White;
+                                    break;
+                                }
+                            }
                         }
-                        else
+                        else if (line.Contains("++"))
                         {
-                            try
-                            {
-                                Console.CursorTop = Convert.ToInt32(line.Substring(10));
-                            }
-                            catch
-                            {
-                                Console.ForegroundColor = Red;
-                                Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a valid integer");
-                                Console.ForegroundColor = White;
-                                break;
-                            }
+                            Console.CursorTop++;
+                        }
+                        else if (line.Contains("--"))
+                        {
+                            Console.CursorTop--;
                         }
                     }
 
