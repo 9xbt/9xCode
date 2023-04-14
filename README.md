@@ -1,10 +1,11 @@
 # 9xCode
 My custom scripting language
 
-How to use the latest version:
-1. Open the solution file with Visual Studio
-2. Hit "Start" to build and run it
-3. Open your 9xCode script and let it run
+If you want to use the latest version, do this:
+1. Clone the repository
+2. Open the solution file with Visual Studio
+3. Hit "Start" to compile and it will automatically open itself up
+4. Open your 9xCode script and let it run
 
 If you want to use a pre-built version, do this:
 1. Download the 9xCode executable from the latest release
