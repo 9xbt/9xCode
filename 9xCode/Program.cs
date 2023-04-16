@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -43,7 +44,8 @@ namespace _9xCode
 
                 Dictionary<string, bool> Booleans = new Dictionary<string, bool>() { };
                 Dictionary<string, int> Integers = new Dictionary<string, int>() { };
-                Dictionary<string, string> Strings = new Dictionary<string, string>() { };
+                Dictionary<string, string> Strings = new Dictionary<string, string>() { { "Ver", "b1.1" } };
+                Dictionary<string, ConsoleColor> Colors = new Dictionary<string, ConsoleColor>() { };
 
                 string[] code = File.ReadAllLines(dialog.FileName);
 
@@ -51,8 +53,18 @@ namespace _9xCode
                 {
                     string line = code[i].Trim();
 
+                    #region Globals
+
                     if (ConsoleLib)
                     {
+                        if (Colors.ContainsKey("ForeColor"))
+                        {
+                            Colors.Remove("ForeColor");
+                        }
+                        if (Colors.ContainsKey("BackColor"))
+                        {
+                            Colors.Remove("BackColor");
+                        }
                         if (Integers.ContainsKey("CursorX"))
                         {
                             Integers.Remove("CursorX");
@@ -61,10 +73,44 @@ namespace _9xCode
                         {
                             Integers.Remove("CursorY");
                         }
+                        if (Booleans.ContainsKey("Cursor"))
+                        {
+                            Booleans.Remove("Cursor");
+                        }
 
+                        Colors.Add("ForeColor", Console.ForegroundColor);
+                        Colors.Add("BackColor", Console.BackgroundColor);
                         Integers.Add("CursorX", Console.CursorLeft);
                         Integers.Add("CursorY", Console.CursorTop);
+                        Booleans.Add("Cursor", Console.CursorVisible);
                     }
+
+                    if (TimeLib)
+                    {
+                        if (Integers.ContainsKey("Millisecond"))
+                        {
+                            Integers.Remove("Millisecond");
+                        }
+                        if (Integers.ContainsKey("Second"))
+                        {
+                            Integers.Remove("Second");
+                        }
+                        if (Integers.ContainsKey("Minute"))
+                        {
+                            Integers.Remove("Minute");
+                        }
+                        if (Integers.ContainsKey("Hour"))
+                        {
+                            Integers.Remove("Hour");
+                        }
+
+                        Integers.Add("Millisecond", DateTime.Now.Millisecond);
+                        Integers.Add("Second", DateTime.Now.Second);
+                        Integers.Add("Minute", DateTime.Now.Minute);
+                        Integers.Add("Hour", DateTime.Now.Hour);
+                    }
+
+                    #endregion
 
                     #region Default library
 
@@ -96,26 +142,31 @@ namespace _9xCode
                         if (sub.StartsWith("System"))
                         {
                             SysLib = true;
+                            continue;
                         }
 
                         else if (sub.StartsWith("Console"))
                         {
                             ConsoleLib = true;
+                            continue;
                         }
 
                         else if (sub.StartsWith("IO"))
                         {
                             IOLib = true;
+                            continue;
                         }
 
                         else if (sub.StartsWith("Time"))
                         {
                             TimeLib = true;
+                            continue;
                         }
 
                         else if (sub.StartsWith("Windows"))
                         {
                             WinLib = true;
+                            continue;
                         }
 
                         else
@@ -129,57 +180,214 @@ namespace _9xCode
 
                     else if (line.StartsWith("Bool"))
                     {
-                        string key = line.Substring(5, line.IndexOf(" =") - 5);
-
-                        if (Booleans.ContainsKey(key))
+                        if (line.Contains('='))
                         {
-                            Booleans.Remove(key);
-                        }
+                            string key = line.Substring(5, line.IndexOf(" =") - 5);
+                            string sub = line.Substring(line.IndexOf("= ") + 2);
 
-                        Booleans.Add(key, Convert.ToBoolean(line.Substring(line.IndexOf("= ") + 2)));
+                            #region Console library
+
+                            if (!ConsoleLib)
+                            {
+                                if (key == "Cursor")
+                                {
+                                    Console.ForegroundColor = Red;
+                                    Console.WriteLine("Error at line " + (i + 1) + ": Console library not imported");
+                                    Console.ForegroundColor = White;
+                                    break;
+                                }
+                            }
+
+                            if (ConsoleLib && key == "Cursor")
+                            {
+                                Console.CursorVisible = Convert.ToBoolean(sub);
+                                continue;
+                            }
+
+                            #endregion
+
+                            if (Booleans.ContainsKey(key))
+                            {
+                                Booleans.Remove(key);
+                            }
+
+                            Booleans.Add(key, Convert.ToBoolean(sub));
+                            continue;
+                        }
+                        else
+                        {
+                            string key = line.Substring(5);
+
+                            if (Booleans.ContainsKey(key))
+                            {
+                                Booleans.Remove(key);
+                            }
+
+                            Booleans.Add(key, false);
+                            continue;
+                        }
+                    }
+
+                    else if (line.StartsWith("Color"))
+                    {
+                        if (line.Contains('='))
+                        {
+                            string key = line.Substring(6, line.IndexOf(" =") - 6);
+                            string sub = line.Substring(line.IndexOf("= ") + 2);
+
+                            #region Console library
+
+                            if (!ConsoleLib)
+                            {
+                                if (key == "ForeColor" || key == "BackColor")
+                                {
+                                    Console.ForegroundColor = Red;
+                                    Console.WriteLine("Error at line " + (i + 1) + ": Console library not imported");
+                                    Console.ForegroundColor = White;
+                                    break;
+                                }
+                            }
+
+                            if (ConsoleLib && key == "ForeColor")
+                            {
+                                if (StringToConsoleColor.TryGetValue(sub, out ConsoleColor colval1))
+                                {
+                                    Console.ForegroundColor = colval1;
+                                }
+                                continue;
+                            }
+
+                            if (ConsoleLib && key == "BackColor")
+                            {
+                                if (StringToConsoleColor.TryGetValue(sub, out ConsoleColor colval2))
+                                {
+                                    Console.BackgroundColor = colval2;
+                                }
+                                continue;
+                            }
+
+                            #endregion
+
+                            if (Colors.ContainsKey(key))
+                            {
+                                Colors.Remove(key);
+                            }
+
+                            if (StringToConsoleColor.TryGetValue(sub, out ConsoleColor colval3))
+                            {
+                                Colors.Add(key, colval3);
+                            }
+                            else
+                            {
+                                Console.ForegroundColor = Red;
+                                Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a valid ConsoleColor");
+                                Console.ForegroundColor = White;
+                                break;
+                            }
+                            continue;
+                        }
+                        else
+                        {
+                            string key = line.Substring(6);
+
+                            if (Booleans.ContainsKey(key))
+                            {
+                                Booleans.Remove(key);
+                            }
+
+                            Booleans.Add(key, false);
+                            continue;
+                        }
                     }
 
                     else if (line.StartsWith("Int"))
                     {
-                        string key = line.Substring(4, line.IndexOf(" =") - 4);
-                        string sub = line.Substring(line.IndexOf("= ") + 2);
-
-                        if (Integers.ContainsKey(key))
+                        if (line.Contains('='))
                         {
-                            Integers.Remove(key);
-                        }
+                            string key = line.Substring(4, line.IndexOf(" =") - 4);
+                            string sub = line.Substring(line.IndexOf("= ") + 2);
 
-                        if (!TimeLib)
-                        {
-                            if (sub.StartsWith("Seconds") || sub.StartsWith("Minutes") || sub.Equals("Hours"))
+                            if (Integers.ContainsKey(key))
                             {
-                                Console.ForegroundColor = Red;
-                                Console.WriteLine("Error at line " + (i + 1) + ": Time library not imported");
-                                Console.ForegroundColor = White;
-                                break;
+                                Integers.Remove(key);
                             }
-                        }
 
-                        else if (TimeLib && sub.StartsWith("Seconds"))
-                        {
-                            Integers.Add(key, DateTime.Now.Second);
-                        }
-                        else if (TimeLib && sub.StartsWith("Minutes"))
-                        {
-                            Integers.Add(key, DateTime.Now.Minute);
-                        }
-                        else if (TimeLib && sub.StartsWith("Hours"))
-                        {
-                            Integers.Add(key, DateTime.Now.Hour);
-                        }
-                        else if (sub.StartsWith("0x"))
-                        {
-                            line.Remove(0, 2);
-                            Integers.Add(key, Convert.ToInt32(line.Substring(line.IndexOf("= ") + 2), 16));
+                            #region Console library
+
+                            if (!ConsoleLib)
+                            {
+                                if (sub.StartsWith("CursorX") || sub.StartsWith("CursorY"))
+                                {
+                                    Console.ForegroundColor = Red;
+                                    Console.WriteLine("Error at line " + (i + 1) + ": Console library not imported");
+                                    Console.ForegroundColor = White;
+                                    break;
+                                }
+                            }
+
+                            if (ConsoleLib && key == "CursorX")
+                            {
+                                Console.CursorLeft = Convert.ToInt32(sub);
+                                continue;
+                            }
+
+                            if (ConsoleLib && key == "CursorY")
+                            {
+                                Console.CursorTop = Convert.ToInt32(sub);
+                                continue;
+                            }
+
+                            #endregion
+
+                            #region Time library
+
+                            if (!TimeLib)
+                            {
+                                if (sub.StartsWith("Seconds") || sub.StartsWith("Minutes") || sub.Equals("Hours"))
+                                {
+                                    Console.ForegroundColor = Red;
+                                    Console.WriteLine("Error at line " + (i + 1) + ": Time library not imported");
+                                    Console.ForegroundColor = White;
+                                    break;
+                                }
+                            }
+
+                            #endregion
+
+                            if (TimeLib && sub.StartsWith("Seconds"))
+                            {
+                                Integers.Add(key, DateTime.Now.Second);
+                            }
+                            else if (TimeLib && sub.StartsWith("Minutes"))
+                            {
+                                Integers.Add(key, DateTime.Now.Minute);
+                            }
+                            else if (TimeLib && sub.StartsWith("Hours"))
+                            {
+                                Integers.Add(key, DateTime.Now.Hour);
+                            }
+                            else if (sub.StartsWith("0x"))
+                            {
+                                sub.Remove(0, 2);
+                                Integers.Add(key, Convert.ToInt32(sub, 16));
+                            }
+                            else
+                            {
+                                Integers.Add(key, Convert.ToInt32(sub));
+                            }
+                            continue;
                         }
                         else
                         {
-                            Integers.Add(key, Convert.ToInt32(line.Substring(line.IndexOf("= ") + 2)));
+                            string key = line.Substring(4);
+
+                            if (Integers.ContainsKey(key))
+                            {
+                                Integers.Remove(key);
+                            }
+
+                            Integers.Add(key, 0);
+                            continue;
                         }
                     }
 
@@ -228,6 +436,7 @@ namespace _9xCode
                             {
                                 Strings.Add(key, line.Substring(line.IndexOf("\"") + 1, line.LastIndexOf("\"") - (line.IndexOf("\"") + 1)));
                             }
+                            continue;
                         }
                         else
                         {
@@ -239,6 +448,7 @@ namespace _9xCode
                             }
 
                             Strings.Add(key, "");
+                            continue;
                         }
                     }
 
@@ -258,6 +468,8 @@ namespace _9xCode
                                 break;
                             }
                         }
+
+                        #region Pain (and its still not perfect)
 
                         if (line.Contains('='))
                         {
@@ -282,11 +494,12 @@ namespace _9xCode
                             else if (Booleans.TryGetValue(comparation[0].Trim(), out bool bolval))
                             {
                                 comparation[1] = comparation[1].Substring(1, comparation[1].Length - 2);
-                                if (comparation[1] != bolval.ToString().ToLower()) // For booleans we need to make it lower
+                                if (comparation[1] != bolval.ToString().ToLower())
                                 {
                                     i = endif + 1;
                                 }
                             }
+                            continue;
                         }
                         else if (line.Contains('!'))
                         {
@@ -311,12 +524,15 @@ namespace _9xCode
                             else if (Booleans.TryGetValue(comparation[0].Trim(), out bool bolval))
                             {
                                 comparation[1] = comparation[1].Substring(1, comparation[1].Length - 2);
-                                if (comparation[1] == bolval.ToString().ToLower()) // For booleans we need to make it lower
+                                if (comparation[1] == bolval.ToString().ToLower())
                                 {
                                     i = endif + 1;
                                 }
                             }
+                            continue;
                         }
+
+                        #endregion
                     }
 
                     #endregion
@@ -332,19 +548,19 @@ namespace _9xCode
                         Process.Start(sub1.Trim(), sub2.Trim());
                     }
 
-                    else if (SysLib && line.StartsWith("Stop()"))
+                    else if (SysLib && line.StartsWith("Stop") && line.Contains("(") && line.Contains(")"))
                     {
                         break;
                     }
 
-                    else if (SysLib && line.StartsWith("Goto("))
+                    else if (SysLib && line.StartsWith("Goto"))
                     {
                         int start = line.IndexOf('(');
                         int end = line.IndexOf(')') - start;
                         i = Convert.ToInt32(line.Substring(start + 1, end - 1));
                     }
 
-                    else if (SysLib && line.StartsWith("Delay("))
+                    else if (SysLib && line.StartsWith("Delay"))
                     {
                         int start = line.IndexOf('(');
                         int end = line.IndexOf(')') - start;
@@ -380,35 +596,27 @@ namespace _9xCode
                                     }
                                 }
 
-                                if (sub == "Seconds")
-                                {
-                                    result += DateTime.Now.Second;
-                                }
-                                else if (sub == "Minutes")
-                                {
-                                    result += DateTime.Now.Minute;
-                                }
-                                else if (sub == "Hours")
-                                {
-                                    result += DateTime.Now.Hour;
-                                }
-                                else if (sub.Contains('"'))
+                                if (sub.Contains('"'))
                                 {
                                     string thing = sub;
                                     thing = thing.Substring(1, thing.LastIndexOf('"') - 1);
                                     result += thing;
                                 }
+                                else if (Booleans.TryGetValue(sub, out bool bolval))
+                                {
+                                    result += bolval;
+                                }
                                 else if (Integers.TryGetValue(sub, out int intval))
                                 {
                                     result += intval;
                                 }
+                                else if (Colors.TryGetValue(sub, out ConsoleColor colval))
+                                {
+                                    result += colval;
+                                }
                                 else if (Strings.TryGetValue(sub, out string strval))
                                 {
                                     result += strval;
-                                }
-                                else if (Booleans.TryGetValue(sub, out bool bolval))
-                                {
-                                    result += bolval;
                                 }
                                 else
                                 {
@@ -434,33 +642,25 @@ namespace _9xCode
                                 }
                             }
 
-                            if (TimeLib && sub == "Seconds")
-                            {
-                                Console.Write(DateTime.Now.Second);
-                            }
-                            else if (TimeLib && sub == "Minutes")
-                            {
-                                Console.Write(DateTime.Now.Minute);
-                            }
-                            else if (TimeLib && sub == "Hours")
-                            {
-                                Console.Write(DateTime.Now.Hour);
-                            }
-                            else if (line.Substring(start + 1, 1) == "\"")
+                            if (line.Substring(start + 1, 1) == "\"")
                             {
                                 Console.Write(line.Substring(start + 2, end - 3));
+                            }
+                            else if (Booleans.TryGetValue(sub, out bool bolval))
+                            {
+                                Console.Write(bolval);
                             }
                             else if (Integers.TryGetValue(sub, out int intval))
                             {
                                 Console.Write(intval);
                             }
+                            else if (Colors.TryGetValue(sub, out ConsoleColor colval))
+                            {
+                                Console.Write(colval);
+                            }
                             else if (Strings.TryGetValue(sub, out string strval))
                             {
                                 Console.Write(strval);
-                            }
-                            else if (Booleans.TryGetValue(sub, out bool bolval))
-                            {
-                                Console.Write(bolval);
                             }
                             else
                             {
@@ -468,7 +668,7 @@ namespace _9xCode
                             }
                         }
 
-                        if (line.StartsWith("Print("))
+                        if (line.StartsWith("Print"))
                         {
                             Console.Write('\n');
                         }
@@ -516,94 +716,6 @@ namespace _9xCode
                             Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a valid color");
                             Console.ForegroundColor = White;
                             break;
-                        }
-                    }
-
-                    else if (ConsoleLib && line.StartsWith("CursorX"))
-                    {
-                        if (line.Contains("="))
-                        {
-                            if (Integers.TryGetValue(line.Substring(10), out int intval))
-                            {
-                                Console.CursorLeft = intval;
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    Console.CursorLeft = Convert.ToInt32(line.Substring(10));
-                                }
-                                catch
-                                {
-                                    Console.ForegroundColor = Red;
-                                    Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a valid integer");
-                                    Console.ForegroundColor = White;
-                                    break;
-                                }
-                            }
-                        }
-                        else if (line.Contains("++"))
-                        {
-                            Console.CursorTop++;
-                        }
-                        else if (line.Contains("--"))
-                        {
-                            Console.CursorTop--;
-                        }
-                    }
-
-                    else if (ConsoleLib && line.StartsWith("CursorY"))
-                    {
-                        if (line.Contains("="))
-                        {
-                            if (Integers.TryGetValue(line.Substring(10), out int intval))
-                            {
-
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    Console.CursorTop = Convert.ToInt32(line.Substring(10));
-                                }
-                                catch
-                                {
-                                    Console.ForegroundColor = Red;
-                                    Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a valid integer");
-                                    Console.ForegroundColor = White;
-                                    break;
-                                }
-                            }
-                        }
-                        else if (line.Contains("++"))
-                        {
-                            Console.CursorTop++;
-                        }
-                        else if (line.Contains("--"))
-                        {
-                            Console.CursorTop--;
-                        }
-                    }
-
-                    else if (ConsoleLib && line.StartsWith("Cursor = "))
-                    {
-                        if (Booleans.TryGetValue(line.Substring(9), out bool intval))
-                        {
-                            Console.CursorVisible = intval;
-                        }
-                        else
-                        {
-                            try
-                            {
-                                Console.CursorVisible = Convert.ToBoolean(line.Substring(9));
-                            }
-                            catch
-                            {
-                                Console.ForegroundColor = Red;
-                                Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a boolean");
-                                Console.ForegroundColor = White;
-                                break;
-                            }
                         }
                     }
 
