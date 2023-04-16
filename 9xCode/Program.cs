@@ -469,7 +469,7 @@ namespace _9xCode
                             }
                         }
 
-                        #region Pain (and its still not perfect)
+                        #region If statements (needs re-working but its fine for now tbh)
 
                         if (line.Contains('='))
                         {
@@ -674,49 +674,19 @@ namespace _9xCode
                         }
                     }
 
-                    else if (ConsoleLib && line.Equals("Clear()"))
+                    else if (ConsoleLib && line.StartsWith("Clear") && line.Contains("(") && line.Contains(")"))
                     {
                         Console.Clear();
                     }
 
-                    else if (ConsoleLib && line.Equals("Read()"))
+                    else if (ConsoleLib && line.StartsWith("Read") && line.Contains("(") && line.Contains(")"))
                     {
                         Console.ReadKey(true);
                     }
 
-                    else if (ConsoleLib && line.Equals("ReadLine()"))
+                    else if (ConsoleLib && line.StartsWith("ReadLine") && line.Contains("(") && line.Contains(")"))
                     {
                         Console.ReadLine();
-                    }
-
-                    else if (ConsoleLib && line.StartsWith("ForeColor = "))
-                    {
-                        if (StringToConsoleColor.TryGetValue(line.Substring(12), out ConsoleColor clrval))
-                        {
-                            Console.ForegroundColor = clrval;
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = Red;
-                            Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a valid color");
-                            Console.ForegroundColor = White;
-                            break;
-                        }
-                    }
-
-                    else if (ConsoleLib && line.StartsWith("BackColor = "))
-                    {
-                        if (StringToConsoleColor.TryGetValue(line.Substring(12), out ConsoleColor clrval))
-                        {
-                            Console.BackgroundColor = clrval;
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = Red;
-                            Console.WriteLine("Syntax error at line " + (i + 1) + ": Not a valid color");
-                            Console.ForegroundColor = White;
-                            break;
-                        }
                     }
 
                     #endregion
@@ -727,7 +697,7 @@ namespace _9xCode
                     {
                         int start = line.IndexOf('(');
                         int end = line.IndexOf(')') - start;
-                        string sub = string.Empty;
+                        string sub;
 
                         if (Strings.TryGetValue(line.Substring(line.IndexOf("(") + 1, line.IndexOf(")") - (line.IndexOf("(") + 1)), out string strval))
                         {
