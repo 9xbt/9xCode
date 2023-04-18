@@ -1,5 +1,5 @@
 # 9xCode
-9xCode is a custom scripting language that allows you to make simple programs using the console.
+9xCode is an interpreted programming language that allows you to make simple programs using the console.
 
 ## Running 9xCode
 If you want to use the latest version, do this:
