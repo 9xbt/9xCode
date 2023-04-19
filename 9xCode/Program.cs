@@ -8,7 +8,7 @@ using System.Threading;
 using System.Windows.Forms;
 using static System.ConsoleColor;
 
-// Beta 2.1
+// Beta 2.2
 // Licensed under the MIT license
 
 namespace _9xCode
@@ -26,6 +26,11 @@ namespace _9xCode
             { "Red", Red }, { "Magenta", Magenta },
             { "Yellow", Yellow }, { "White", White },
         };
+
+        static string ReplaceSpecialCharacters(string text)
+        {
+            return text.Replace("\\n", "\n");
+        }
 
         [STAThread]
         static void Main()
@@ -45,7 +50,7 @@ namespace _9xCode
                 bool SysLib = false, ConsoleLib = false, IOLib = false, TimeLib = false, WinLib = false;
                 Dictionary<string, bool> Booleans = new Dictionary<string, bool>() { };
                 Dictionary<string, int> Integers = new Dictionary<string, int>() { };
-                Dictionary<string, string> Strings = new Dictionary<string, string>() { { "Version", "b2.1" } };
+                Dictionary<string, string> Strings = new Dictionary<string, string>() { { "Version", "b2.2" } };
                 Dictionary<string, ConsoleColor> Colors = new Dictionary<string, ConsoleColor>() { };
 
                 string[] code = File.ReadAllLines(openDialog.FileName);
@@ -56,7 +61,7 @@ namespace _9xCode
                 Retry:
                     try
                     {
-                        string line = code[i].Trim();
+                        string line = ReplaceSpecialCharacters(code[i].Trim());
 
                         #region Globals
 
@@ -653,9 +658,10 @@ namespace _9xCode
 
                         #region IO library
 
-                        else if (IOLib && line.StartsWith("Mk") && line.Contains(">>"))
+                        else if (IOLib && line.StartsWith("MkFile") && line.Contains(">>"))
                         {
                             string sub = line.Split('>')[2].Trim();
+                            sub = sub.Substring(1, sub.Length - 2);
 
                             if (Strings.TryGetValue(sub, out string strval))
                             {
@@ -672,6 +678,7 @@ namespace _9xCode
                         else if (IOLib && line.StartsWith("MkDir") && line.Contains(">>"))
                         {
                             string sub = line.Split('>')[2].Trim();
+                            sub = sub.Substring(1, sub.Length - 2);
 
                             if (Strings.TryGetValue(sub, out string strval))
                             {
