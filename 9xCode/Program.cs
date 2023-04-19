@@ -27,11 +27,6 @@ namespace _9xCode
             { "Yellow", Yellow }, { "White", White },
         };
 
-        static string ReplaceSpecialCharacters(string text)
-        {
-            return text.Replace("\\n", "\n");
-        }
-
         [STAThread]
         static void Main()
         {
@@ -61,7 +56,7 @@ namespace _9xCode
                 Retry:
                     try
                     {
-                        string line = ReplaceSpecialCharacters(code[i].Trim());
+                        string line = code[i].Trim().Replace("\\n", "\n");
 
                         #region Globals
 
